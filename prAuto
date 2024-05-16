@@ -1,0 +1,105 @@
+Sub prAuto()
+
+Dim cell As Range
+Dim sedols As Range
+Dim ratings As Range
+Dim portName As String
+Dim portRange As Range
+Dim porTotal As Long
+Dim investments() As Variant
+Dim wbk As Excel.Workbook
+Dim wks As Excel.Worksheet
+Dim i As Long
+
+'create named range of Client Ref
+Worksheets("Val").Range("A2").Name = "cltRef"
+
+'sum portfolio value
+porTotal = WorksheetFunction.Sum(Range("G2", Range("G2").End(xlDown)))
+
+'Create array of investments from investments workbook - this includes headers, which means the first SEDOL will be position 1 in the array
+Set wbk = Excel.Workbooks.Open("S:\DM CLIENTS\Investments.xlsx")
+Set wks = wbk.Worksheets("investments")
+wks.Range("A1", Range("A1").End(xlDown).End(xlToRight)).Select
+investments = Selection
+wbk.Close
+
+'add headings Asset Class and Risk
+Range("L1").value = "% Total"
+Range("M1").value = "Asset Class"
+Range("N1").value = "Risk"
+Range("O1").value = "Rating"
+
+'Trim SEDOLS, change blank entry to "CASH", populate asset class and risk fields
+Range("K2", Range("K2").End(xlDown)).Select
+
+Set sedols = Selection
+
+For Each cell In sedols.Cells
+    
+    cell = Trim(cell)
+    
+    If IsEmpty(cell) Then
+        cell.value = "CASH"
+    End If
+    
+    If IsNull(whereInArray(investments, cell)) Then
+            cell.Offset(0, 2) = "N/A"
+            cell.Offset(0, 3) = "N/A"
+            cell.Offset(0, 4) = "N/A"
+        
+        Else
+            cell.Offset(0, 2) = investments(whereInArray(investments, cell), 4)
+            cell.Offset(0, 3) = investments(whereInArray(investments, cell), 5)
+            cell.Offset(0, 4) = investments(whereInArray(investments, cell), 6)
+        
+    End If
+    
+    cell.Offset(0, 1) = cell.Offset(0, -4) / porTotal
+    cell.Offset(0, 1).NumberFormat = "0.00%"
+        
+Next cell
+    
+'Create named range of portfolio valuation
+portName = "portfolio"
+Range("A1", Range("A1").End(xlDown).End(xlToRight)).Select
+Set portRange = Selection
+ThisWorkbook.Names.Add Name:=portName, RefersTo:=portRange
+
+'Spreadsheet fomatting
+Columns("L:O").HorizontalAlignment = xlCenter
+Columns("C:J").HorizontalAlignment = xlRight
+Columns("A:O").EntireColumn.AutoFit
+Rows("1:1").Font.Bold = True
+
+'Highlight Non Buy List Investments
+Range("O2", Range("O2").End(xlDown)).Select
+
+Set ratings = Selection
+
+For Each cell In ratings.Cells
+
+    If cell.value = "Non Buy List" Then
+            Range("A" & cell.Row, "O" & cell.Row).Select
+            Selection.Font.Color = RGB(156, 0, 6)
+            Selection.Interior.Color = RGB(255, 199, 206)
+    End If
+
+Next cell
+    
+End Sub
+
+Private Function whereInArray(theArray As Variant, value As Variant) As Variant
+
+'Searches first column of array for value and returns position, or null if not found
+Dim i As Long
+For i = LBound(theArray) To UBound(theArray)
+    If theArray(i, 1) = value Then
+        whereInArray = i
+        Exit Function
+    End If
+Next i
+
+whereInArray = Null
+
+End Function
