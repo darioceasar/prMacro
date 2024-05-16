@@ -1,0 +1,54 @@
+Sub saveAsPDF()
+
+Dim filePath As String
+Dim fileNameSplit() As String
+Dim workSheetNames(1 To 2) As String
+Dim i As Integer
+Dim n As Integer
+
+
+filePath = ActiveWorkbook.Path
+fileName = ActiveWorkbook.Name
+
+fileNameSplit = Split(fileName, "-")
+
+workSheetNames(1) = "Asset Allocation"
+workSheetNames(2) = "Valuation"
+n = ActiveWorkbook.Worksheets.Count - 1
+
+For i = 1 To n
+
+Worksheets(i).Select
+ 
+ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, _
+fileName:=filePath & "\" & fileNameSplit(0) & "- " & workSheetNames(i) & ".pdf", _
+Quality:=xlQualityStandard, IncludeDocProperties:=True, _
+IgnorePrintAreas:=False, OpenAfterPublish:=False
+ 
+Next
+
+End Sub
+
+Sub saveAsXLS()
+
+Dim fileName As String
+Dim todayDate As String
+Dim cltRef As String
+Dim fileIdentifier As String
+Dim filePath As String
+Dim fileTpye As String
+
+'set variables
+todayDate = Format(Date, "ddmmyy")
+cltRef = Worksheets("Val").Range("A2")
+fileIdentifier = "Portfolio Analysis"
+FileType = ".xlsx"
+filePath = "S:\CLIENTS\CLIENTS\"
+
+'set file name, with dfault save location (filePath)
+fileName = filePath & todayDate & " - " & cltRef & " - " & fileIdentifier & fileTpye
+
+'show save as dialog
+Application.Dialogs(xlDialogSaveAs).Show fileName
+
+End Sub
